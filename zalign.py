@@ -15,9 +15,9 @@ def align_exception():
   print ''
   print '********************************************************************************************'
   print '       Welcome to Zalign!'
-  print 'Usage: Please provide the name of the PDB file (-f) and the indices of three host atoms'
+  print 'Usage: Please provide the name of the PDB file (-f) and the indices of three receptor atoms'
   print '       that you think should lie in the same XY plane after the Z-axis alignment (-a1, -a2, -a3).'
-  print '       Pick up a fourth host atom that is supposed to have more negative Z coordinates'
+  print '       Pick up a fourth receptor atom that is supposed to have more negative Z coordinates'
   print '       after alignment (-a4), so that the molecule will point to the desired +Z or -Z direction.'
   print '       In addition, specify the rotation angle (in degrees) around the z axis (-r) or leave it as 0.'
   print '       The new origin will be read from the APR input file (the G1 entry).'
@@ -85,7 +85,7 @@ def find_index(usr_input, pdbfile):
     for i in range(0, len(lines)):
         newline = lines[i].split()
         if newline[0] == 'ATOM' or newline[0] == 'HETATM':
-            if (newline[3] == resname or int(lines[i][23:27].strip())==res_id) and newline[2] == atom:
+            if (newline[3] == resname or int(lines[i][22:27].strip())==res_id) and newline[2] == atom:
                 flag = 1
                 break
     pdb_file.close()
@@ -142,7 +142,7 @@ for i in arg_list:
 
 ismyinstance('float',rotangle,'-r')
 
-cutoff =0.05
+cutoff = 0.05
 
 check_file(pdb_file)
 check_file(input_file) 
@@ -170,6 +170,7 @@ idx2 = find_index(H2,pdb_file)
 idx3 = find_index(H3,pdb_file)
 idx4 = find_index(H4,pdb_file)
 idx_origin = find_index(G1,pdb_file)
+  
 
 # read coordinates and other information from the PDB file
 
@@ -198,9 +199,9 @@ for i in range(len(lines)):
           total_atom += 1
           coords.append((float(lines[i][30:38].strip()), float(lines[i][38:46].strip()), float(lines[i][46:54].strip())))
           head_list.append(splitdata[0]) 
-          atom_namelist.append(splitdata[2])             
+          atom_namelist.append(lines[i][12:16])             
           resname_list.append(splitdata[3])
-          resid_list.append(int(lines[i][23:27].strip()))
+          resid_list.append(int(lines[i][22:27].strip()))
           chain_list.append(lines[i][20:22].strip())
           col_list.append(lines[i][55:59].strip())
           col2_list.append(lines[i][60:66].strip())
@@ -271,10 +272,10 @@ for i in range(0, total_atom):
   tmpz = float(coords_new[i][2]); #  z coordinate doesn't change
   coords_new3.append((tmpx, tmpy, tmpz))
 
-# Adjust the residue IDs if they do not start with 4 
+# Adjust the residue IDs if they do not start with 4
 diff =  resid_list[0] - 4
 resid_list = [ id - diff for id in resid_list]
-  
+
 # Write the new pdb file
 if (flag == 1):
   # Positions for the dummy atoms 
@@ -289,12 +290,12 @@ if (flag == 1):
   for i in range(total_atom):
       if not chain_list[i]:
          chain_list[i] = ' '
-      newPDB_file.write('%-6s%5s  %-4s%-3s %s %3s'%(head_list[i], i+4, atom_namelist[i],resname_list[i], chain_list[i], resid_list[i]))
+      newPDB_file.write('%-6s%5s %4s %-3s %s%4s'%(head_list[i], i+4, atom_namelist[i],resname_list[i], ' ', resid_list[i]))
       newPDB_file.write('%12.3f%8.3f%8.3f'%(float(coords_new3[i][0]), float(coords_new3[i][1]), float(coords_new3[i][2])))
-      newPDB_file.write('%6.2f%6.2f'%(float(col_list[i]), float(col2_list[i])))
-      newPDB_file.write('%12s\n'%(col3_list[i]))
+      newPDB_file.write('%6.2f%6.2f\n'%(float(col_list[i]), float(col2_list[i])))
+      #newPDB_file.write('%12s\n'%(col3_list[i]))
       if i+1 in ter_list:      
-         newPDB_file.write('%-6s%5s  %-4s%-3s %s %3s\n'%('TER', i+4, '',resname_list[i], chain_list[i], resid_list[i]))
+         newPDB_file.write('%-6s%5s %4s %-3s %s%4s\n'%('TER', i+4, ' ',resname_list[i], ' ', resid_list[i]))
 
   if total_atom not in ter_list:
      newPDB_file.write('TER\n') 
